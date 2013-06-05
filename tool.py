@@ -1,11 +1,13 @@
+#!/usr/bin/python
+import argparse, subprocess, sys, os
 import serial, time, binascii, os
 
-possibleSerialPorts = [d for d in os.listdir("/dev") if "ttyACM" in d]
+parser = argparse.ArgumentParser(description='These are some simple scripts to interface a oneWire eeprom to a computer using a arduino Mirror..')
 
-spAddy = os.path.join("/dev", possibleSerialPorts[0])
-print( "Using serial port: " + spAddy)
-sp = serial.Serial(spAddy, baudrate=9600, timeout=1)
-sp.flushInput()
+parser.add_argument("-s", "--save", help="Save the eeprom to disk. (Default action)", action="store_true")
+parser.add_argument("-l", "--load", help="Restore the eeprom to the oldest available image.", action="store_true")
+parser.add_argument("-t", "--test", help="Test eeprom (and arduino/connections etc).", action="store_true")
+parser.add_argument("-c", "--clear", help="Clear the flash write all zeros.")
 
 def readROM():
     sp.write("r")
@@ -19,7 +21,6 @@ def pollForChip():
     sp.write("x")
     return sp.read(1) == "p"
 
-
 def waitForChip():
     while True:
         print "Polling for chip. . ."
@@ -28,11 +29,12 @@ def waitForChip():
     print "\tfound!"
 
 def echo():
+    print "ping. . .",
     sp.write("e")
-    if sp.read() != "e": print "No echo :("
-
-
-
+    if sp.read() != "e":
+        print "No echo :("
+    else:
+        print "pong! (success)"
 def getPathForRom(rom):
     return os.path.join("flash-dumps", binascii.hexlify(rom))
 
@@ -48,7 +50,7 @@ def dump2433():
 
     # Read the flash
     flash = readFlash()
-    print "Flash Read: %i bytes" % len(flash)
+    print("Flash Read: %i bytes" % len(flash))
 
     # Read it 5x and make sure they all match
     for reread in range(5): assert flash == readFlash(), "Mismatched flash read.  Aborting"
@@ -76,13 +78,13 @@ def write2433(flash):
     #stupid check the flash size to 512
     assert len(flash) == 512, "ROM size is not 512  ({0}".format(len(flash))
 
-    # Transmit the new flash
+    # Transmit the write command + the new flash
     sp.write("w")
     sp.write(flash)
-
-    # Read the reported success flag
-    print sp.read(2**15)
-    print readFlash() == flash
+    if sp.read() == "t":
+        print("Success")
+    else:
+        print("Failure!")
 
 def writeOldestToChip():
     waitForChip()
@@ -99,17 +101,42 @@ def writeOldestToChip():
     oldestFlashData = open(flashPath).read()
     write2433(oldestFlashData)
 
+    print("Verifying write")
+    assert readFlash() == oldestFlashData, "Write failure!  Aborting."
+
 def clearFlash():
     waitForChip()
     currentRom = readROM()
-
     print("Detected Chip with ROM: " + binascii.hexlify(currentRom))
-
     write2433("\0" * 512)
 
 
-clearFlash()
 
-# print binascii.hexlify(readFlash())
-writeOldestToChip()
+# Start the serial port up.  NB this is *nix specific, so needs changing for windows users.
+possibleSerialPorts = [d for d in os.listdir("/dev") if "ttyACM" in d]
+spAddy = os.path.join("/dev", possibleSerialPorts[0])
+print( "Using serial port: " + spAddy)
+sp = serial.Serial(spAddy, baudrate=9600, timeout=1)
+sp.flushInput()
 
+args = parser.parse_args()
+
+if args.test:
+    waitForChip()
+    print("Doing Echo Test")
+    echo()
+    print("Reading ROM ID:",)
+    print(binascii.hexlify(readROM()))
+    sys.exit(0)
+
+if args.load:
+    print("Backing up eeprom")
+    dump2433()
+
+    # Flush the input stream b/c these are independant interations
+    sp.flushInput()
+    print("Flashing oldest stored")
+    writeOldestToChip()
+else:
+    print("Dumping eeprom")
+    dump2433()
