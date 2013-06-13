@@ -14,6 +14,7 @@ def readROM():
     return sp.read(9)
 
 def readFlash():
+    sp.flushInput()
     sp.write("f")
     return sp.read(512)
 
@@ -27,6 +28,10 @@ def waitForChip():
         if pollForChip(): break
         time.sleep(0.5)
     print "\tfound!"
+    
+    # Flush the serial port!
+    sp.flushInput()
+
 
 def echo():
     print "ping. . .",
@@ -81,7 +86,12 @@ def write2433(flash):
     # Transmit the write command + the new flash
     sp.write("w")
     sp.write(flash)
-    if sp.read() == "t":
+
+    result = sp.read(3)
+
+    print "Write Result:", repr(result)
+    
+    if result == "t":
         print("Success")
     else:
         print("Failure!")
@@ -102,7 +112,18 @@ def writeOldestToChip():
     write2433(oldestFlashData)
 
     print("Verifying write")
-    assert readFlash() == oldestFlashData, "Write failure!  Aborting."
+    reread = readFlash()
+    if reread != oldestFlashData:
+        print "Write failure!  Aborting."
+        print "First wrong offset:"
+
+        print type(oldestFlashData), len(oldestFlashData)
+        print type(reread), len(reread)
+        for n, (d1, d2) in enumerate(zip(oldestFlashData, reread)):
+            if d1 != d1:
+                print "Broken at", n, binascii.hexlify(d1), binascii.hexlify(d2)
+    else:
+        print "Write successful."
 
 def clearFlash():
     waitForChip()
@@ -110,13 +131,11 @@ def clearFlash():
     print("Detected Chip with ROM: " + binascii.hexlify(currentRom))
     write2433("\0" * 512)
 
-
-
 # Start the serial port up.  NB this is *nix specific, so needs changing for windows users.
 possibleSerialPorts = [d for d in os.listdir("/dev") if "ttyACM" in d]
 spAddy = os.path.join("/dev", possibleSerialPorts[0])
 print( "Using serial port: " + spAddy)
-sp = serial.Serial(spAddy, baudrate=9600, timeout=1)
+sp = serial.Serial(spAddy, baudrate=9600, timeout=3)
 sp.flushInput()
 
 args = parser.parse_args()
