@@ -62,7 +62,7 @@ def dump2433():
 
     # Make a path to store the dumped data
     fPath = getPathForRom(rom)
-    if not os.path.isdir(fPath): os.mkdir(fPath)
+    if not os.path.isdir(fPath): os.makedirs(fPath)
 
     # Mark them by the time, so we can reload the oldest one later
     fullNamePath = os.path.join(fPath, str(time.time()) + ".bin")
@@ -103,7 +103,7 @@ def writeOldestToChip():
     print("Detected Chip with ROM: " + binascii.hexlify(currentRom))
 
     romDIR = getPathForRom(currentRom)
-    flashes = os.listdir(romDIR)
+    flashes = [f for f in os.listdir(romDIR) if not f.startswith(".")]
     flashes.sort()
     flashPath = os.path.join(romDIR, flashes[0])
 
