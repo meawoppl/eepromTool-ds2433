@@ -28,7 +28,7 @@ def waitForChip():
         if pollForChip(): break
         time.sleep(0.5)
     print "\tfound!"
-    
+
     # Flush the serial port!
     sp.flushInput()
 
@@ -90,7 +90,7 @@ def write2433(flash):
     result = sp.read(3)
 
     print "Write Result:", repr(result)
-    
+
     if result == "t":
         print("Success")
     else:
@@ -132,7 +132,15 @@ def clearFlash():
     write2433("\0" * 512)
 
 # Start the serial port up.  NB this is *nix specific, so needs changing for windows users.
-possibleSerialPorts = [d for d in os.listdir("/dev") if "ttyACM" in d]
+if "linux" in sys.platform
+    possibleSerialPorts = [d for d in os.listdir("/dev") if "ttyACM" in d]
+elif sys.platform is "darwin":
+    possibleSerialPorts = [d for d in os.listdir("/dev") if "tty.usbmodemfa131" in d]
+else
+    possibleSerialPorts = ["COM1", "COM2", "COM3", "COM4"]
+
+
+
 spAddy = os.path.join("/dev", possibleSerialPorts[0])
 print( "Using serial port: " + spAddy)
 sp = serial.Serial(spAddy, baudrate=9600, timeout=3)
