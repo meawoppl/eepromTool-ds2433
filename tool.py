@@ -132,7 +132,7 @@ def clearFlash():
     write2433("\0" * 512)
 
 # Start the serial port up.  NB this is *nix specific, so needs changing for windows users.
-if "linux" in sys.platform
+if "linux" in sys.platform:
     possibleSerialPorts = [d for d in os.listdir("/dev") if "ttyACM" in d]
 elif sys.platform is "darwin":
     possibleSerialPorts = [d for d in os.listdir("/dev") if "tty.usbmodemfa131" in d]
