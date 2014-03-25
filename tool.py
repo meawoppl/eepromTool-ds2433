@@ -136,7 +136,7 @@ if "linux" in sys.platform:
     possibleSerialPorts = [d for d in os.listdir("/dev") if "ttyACM" in d]
 elif sys.platform is "darwin":
     possibleSerialPorts = [d for d in os.listdir("/dev") if "tty.usbmodemfa131" in d]
-else
+else:
     possibleSerialPorts = ["COM1", "COM2", "COM3", "COM4"]
 
 
