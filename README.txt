@@ -2,10 +2,14 @@ eepromTool-ds2433
 =================
 
 A tool for writing and reading OneWire based ds2433 eeproms.  
-Tested on 
- - Ubuntu/Mint Linux w/ Arduino Uno
- - OSX with Uno
- - Win95
+Tested on Python 2.7 with:
+ - Ubuntu/Mint (12.10 & 13.04)
+ - OSX
+ - Windows 95 & 7
+ 
+Aruino Versions:
+ - Uno
+ - Mega
  
 Reports of success/failure are highly appreciated!
 
