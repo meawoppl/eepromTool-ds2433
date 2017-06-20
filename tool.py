@@ -134,8 +134,8 @@ def clearFlash():
 # Start the serial port up.  NB this is *nix specific, so needs changing for windows users.
 if "linux" in sys.platform:
     possibleSerialPorts = [d for d in os.listdir("/dev") if "ttyACM" in d]
-elif sys.platform is "darwin":
-    possibleSerialPorts = [d for d in os.listdir("/dev") if "tty.usbmodemfa131" in d]
+elif sys.platform == "darwin":
+    possibleSerialPorts = [d for d in os.listdir("/dev") if "tty.usbserial" in d or "tty.usbmodem" in d]
 else:
     possibleSerialPorts = ["COM1", "COM2", "COM3", "COM4"]
 
