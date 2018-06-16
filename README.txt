@@ -6,6 +6,9 @@ Tested on Python 2.7 with:
  - Ubuntu/Mint (12.10 & 13.04)
  - OSX
  - Windows 95 & 7
+
+Dependency requirement:
+ - astm-serial (pip2 install astm-serial)
  
 Aruino Versions:
  - Uno
